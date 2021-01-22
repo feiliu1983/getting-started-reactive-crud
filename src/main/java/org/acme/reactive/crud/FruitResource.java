@@ -16,11 +16,13 @@
 
 package org.acme.reactive.crud;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -135,6 +137,32 @@ public class FruitResource {
     @GET
     @Valid
     public Multi<Fruit> get() {
+
+
+//        try (InputStream inputStream = getClass().getResourceAsStream("/test.csv");
+//             BufferedReader reader = new
+//                 BufferedReader(new InputStreamReader(inputStream))) {
+//            String contents = reader.lines()
+//                .collect(Collectors.joining(System.lineSeparator()));
+//        }
+//        catch (Exception e) {
+//            System.out.println(e.getMessage());
+//        }
+//
+//        traverseFolder1("/");
+//        File file=new File("test.csv");
+//
+//        if (file.exists()) {
+//            System.out.println("");
+//        }
+//        else
+//        {
+//            System.out.println("");
+//        }
+
+
+
+
         Fruit faf = new Fruit(1233L, "");
         Set<ConstraintViolation<Fruit>> fdsa = new HashSet<>();
         try {
@@ -150,7 +178,11 @@ public class FruitResource {
             }
         }
 
+
+
+
         return Fruit.findAll(client).onItem().transform(item -> myvalidate(item, validator));
+
 
     }
 
@@ -162,12 +194,56 @@ public class FruitResource {
         return item;
     }
 
+
+    public static List<File> traverseFolder1(String path) {
+        List<File> fileList = new ArrayList<>();
+        int fileNum = 0, folderNum = 0;
+        File file = new File("../src/main/resources/test.csv");
+        if (file.exists()) {
+            LinkedList<File> list = new LinkedList<File>();
+            File[] files = file.listFiles();
+            for (File file2 : files) {
+                if (file2.isDirectory()) {
+                    System.out.println("文件夹:" + file2.getAbsolutePath());
+                    list.add(file2);
+                    folderNum++;
+                } else {
+                    fileList.add(file2);
+                    System.out.println("文件:" + file2.getAbsolutePath());
+                    fileNum++;
+                }
+            }
+            File temp_file;
+            while (!list.isEmpty()) {
+                temp_file = list.removeFirst();
+                files = temp_file.listFiles();
+                for (File file2 : files) {
+                    if (file2.isDirectory()) {
+                        System.out.println("文件夹:" + file2.getAbsolutePath());
+                        list.add(file2);
+                        folderNum++;
+                    } else {
+                        fileList.add(file2);
+                        System.out.println("文件:" + file2.getAbsolutePath());
+                        fileNum++;
+                    }
+                }
+            }
+        } else {
+            System.out.println("文件不存在!");
+        }
+        System.out.println("文件夹共有:" + folderNum + ",文件共有:" + fileNum);
+        return fileList;
+    }
+
     @GET
     @Path("{id}")
     public Uni<Response> getSingle(@PathParam Long id) {
-        return Fruit.findById(client, id)
+        Uni<Response> result = Fruit.findById(client, id)
             .onItem().transform(fruit -> fruit != null ? Response.ok(fruit) : Response.status(Status.NOT_FOUND))
             .onItem().transform(ResponseBuilder::build);
+
+        return result;
     }
 
     @POST

@@ -27,8 +27,10 @@ import io.vertx.mutiny.sqlclient.Tuple;
 import io.vertx.mutiny.sqlclient.Row;
 import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
+import org.reactivestreams.Publisher;
 
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 public class Fruit {
     public Long id;
@@ -50,13 +52,40 @@ public class Fruit {
     }
 
     public static Multi<Fruit> findAll(MySQLPool client) {
-        return client.query("SELECT id, name FROM fruits ORDER BY name ASC").execute()
-                .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
-                .onItem().transform(Fruit::from);
+        Multi<Fruit> result = client.query("SELECT id, name FROM fruits ORDER BY name ASC").execute()
+            .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
+            .onItem().transform(Fruit::from);
 
-      //  String  name = "wi";
+        Multi<Fruit> fdas = f1(new Fruit())
+            .toUni().invoke(airportPairEntity -> {
+                if (airportPairEntity == null) {
+                    throw new RuntimeException("error");
+                }
+            }).onItem().transform(item -> item.getName())
+           .onItem().transformToMulti(item -> f2(item));
 
-      //  StringUtils.isBlank("fd");
+        // return result.collectItems().first().call(item -> f1(item));
+
+        return result;
+
+        //chain(item -> f1(item));
+
+
+//        Uni<List<Fruit>> xxxxxx = result.collectItems().asList().invoke(airportPairEntity -> {
+//            if (airportPairEntity.isEmpty()) {
+//                System.out.println("fdsf");
+//            }
+//        });
+//
+//
+//        xxxxxx.chain(airportPairEntity->Uni.createFrom().item(airportPairEntity.get(0).getFlightLegTypeCode()));
+
+
+        // return result;
+
+        //  String  name = "wi";
+
+        //  StringUtils.isBlank("fd");
 
 //        MultiOnItem<Row> result = client.query("SELECT id, name FROM fruits where name like " +
 //            "'%$1%' ORDER BY name ASC").execute()
@@ -72,11 +101,23 @@ public class Fruit {
 //        return  result.transform(Fruit::print).onItem().transform(Fruit::from);
     }
 
+    private static Multi<Fruit> f2(String item2) {
+        return null;
+    }
+
+    private static Multi<Fruit> f1(Fruit item) {
+        return null;
+    }
+
     public static Uni<Fruit> findById(MySQLPool client, Long id) {
-        return client.preparedQuery("SELECT id, name FROM fruits WHERE id = $1").execute(Tuple.of(id))
+        Uni<Fruit> result = client.preparedQuery("SELECT id, name FROM fruits WHERE id = $1").execute(Tuple.of(id))
             .onItem().transform(RowSet::iterator)
             .onItem().transform(iterator -> iterator.hasNext() ? from(iterator.next()) : null);
+
+
+        return result;
     }
+
 
     public Uni<Long> save(MySQLPool client) {
 //        return client.preparedQuery("INSERT INTO fruits (name) VALUES (?)").execute(Tuple.of(name))
@@ -115,5 +156,21 @@ public class Fruit {
         System.out.println(row.getLong("id"));
         System.out.println(row.getString("name"));
         return row;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
